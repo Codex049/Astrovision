@@ -16,3 +16,7 @@ __pycache__/
 # IDE
 .vscode/
 .idea/
+
+# Temporarily ignored during staged push — add back after code push succeeds
+Models/
+TestingImages/ExtraPyFIles.zip
