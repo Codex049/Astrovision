@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>🔭 AstroVision — Driven by AI</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #060a14;
+            color: #e8eaf6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ── Starfield ── */
+        #starfield {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+            display: block;
+        }
+
+        /* ── Pages ── */
+        .page { position: relative; z-index: 1; }
+        #landingPage  { display: block; }
+        #resultsPage  { display: none; }
+
+        /* ── Landing ── */
+        .landing-wrap {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px 80px;
+        }
+
+        .brand { text-align: center; margin-bottom: 52px; }
+
+        .brand-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(3.5rem, 8vw, 6.5rem);
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #ffffff;
+            line-height: 1;
+            text-shadow: 0 0 80px rgba(255,220,120,0.2), 0 0 160px rgba(100,160,255,0.14);
+        }
+
+        .brand-sub {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(1rem, 2.5vw, 1.4rem);
+            letter-spacing: 0.38em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.52);
+            margin-top: 10px;
+        }
+
+        /* ══════════════════════════════════════════
+           LIQUID GLASS — shared foundation
+           iOS 26-style: frosted white core, spectral
+           edge refraction, wobble highlight, soft shadow
+        ══════════════════════════════════════════ */
+        .glass-btn {
+            position: relative;
+            display: block;
+            width: 100%;
+            border: none;
+            border-radius: 22px;
+            padding: 30px 28px;
+            cursor: pointer;
+            text-align: center;
+            overflow: hidden;
+            /* liquid glass core: low-opacity white tint */
+            background: rgba(255, 255, 255, 0.10);
+            backdrop-filter: blur(28px) saturate(180%) brightness(1.12);
+            -webkit-backdrop-filter: blur(28px) saturate(180%) brightness(1.12);
+            /* layered border: outer refraction rim + inner highlight */
+            box-shadow:
+                0 0 0 1px rgba(255,255,255,0.28),           /* outer rim */
+                inset 0 1px 0 rgba(255,255,255,0.55),       /* top highlight */
+                inset 0 -1px 0 rgba(255,255,255,0.10),      /* bottom depth */
+                0 8px 40px rgba(0, 0, 0, 0.45),             /* drop shadow */
+                0 2px 8px rgba(120,180,255,0.12);            /* cool tint */
+            transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1),
+                        box-shadow 0.22s ease,
+                        background 0.22s ease;
+        }
+
+        /* Spectral shimmer layer — the "liquid" iridescent sheen */
+        .glass-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: linear-gradient(
+                135deg,
+                rgba(255,255,255,0.22) 0%,
+                rgba(200,230,255,0.08) 30%,
+                rgba(180,140,255,0.06) 55%,
+                rgba(100,200,255,0.10) 80%,
+                rgba(255,255,255,0.16) 100%
+            );
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        /* Moving light blob that tracks mouse — injected via JS */
+        .glass-btn .liquid-light {
+            position: absolute;
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,255,255,0.22) 0%, transparent 70%);
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            transition: left 0.08s, top 0.08s;
+            mix-blend-mode: screen;
+        }
+
+        /* Wobble edge highlight ring */
+        .glass-btn::after {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: inherit;
+            background: transparent;
+            border: 1.5px solid transparent;
+            background-image: linear-gradient(#060a14, #060a14),
+                linear-gradient(135deg,
+                    rgba(255,255,255,0.65) 0%,
+                    rgba(160,210,255,0.2) 35%,
+                    rgba(200,160,255,0.15) 65%,
+                    rgba(255,255,255,0.55) 100%
+                );
+            background-origin: border-box;
+            background-clip: padding-box, border-box;
+            pointer-events: none;
+            opacity: 0.9;
+        }
+
+        .glass-btn:hover {
+            transform: translateY(-3px) scale(1.01);
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow:
+                0 0 0 1px rgba(255,255,255,0.38),
+                inset 0 1px 0 rgba(255,255,255,0.7),
+                inset 0 -1px 0 rgba(255,255,255,0.12),
+                0 16px 60px rgba(0,0,0,0.5),
+                0 4px 20px rgba(120,180,255,0.2);
+        }
+
+        .glass-btn:active {
+            transform: scale(0.985);
+        }
+
+        .glass-btn.dragover {
+            background: rgba(100, 180, 255, 0.18);
+            box-shadow:
+                0 0 0 2px rgba(100,200,255,0.7),
+                inset 0 1px 0 rgba(255,255,255,0.7),
+                0 16px 60px rgba(30,100,200,0.4);
+        }
+
+        /* Text inside glass buttons */
+        .glass-btn-text {
+            position: relative;
+            z-index: 2;
+            font-family: 'Cormorant Garamond', serif;
+            font-style: italic;
+            font-weight: 700;
+            font-size: 1.45rem;
+            color: rgba(255,255,255,0.95);
+            text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+            pointer-events: none;
+        }
+
+        .glass-btn.learn-glass .glass-btn-text {
+            font-size: 1.28rem;
+            color: rgba(255,255,255,0.7);
+        }
+
+        .glass-btn.learn-glass {
+            opacity: 0.8;
+            cursor: default;
+        }
+
+        /* Upload wrap */
+        .upload-btn-wrap {
+            width: 100%;
+            max-width: 480px;
+            margin-bottom: 36px;
+        }
+
+        #fileInput { display: none; }
+
+        /* ── OR separator ── */
+        .or-line {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1rem;
+            letter-spacing: 0.28em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.42);
+            margin-bottom: 28px;
+        }
+
+        /* ── Sample Images ── */
+        .samples-grid {
+            display: flex;
+            gap: 18px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 44px;
+            width: 100%;
+            max-width: 780px;
+        }
+
+        .sample-card {
+            flex: 0 0 220px;
+            height: 200px;
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            border: 1.5px solid rgba(255,255,255,0.22);
+            background: rgba(255,255,255,0.07);
+            backdrop-filter: blur(12px);
+            box-shadow: 0 4px 28px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.3);
+            transition: transform 0.28s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.28s ease, border-color 0.28s;
+        }
+
+        .sample-card:hover {
+            transform: translateY(-6px) scale(1.03);
+            border-color: rgba(160,210,255,0.55);
+            box-shadow: 0 16px 48px rgba(30,100,200,0.3), inset 0 1px 0 rgba(255,255,255,0.45);
+        }
+
+        .sample-card img { width:100%; height:100%; object-fit:cover; display:block; opacity:0.85; transition:opacity 0.25s; }
+        .sample-card:hover img { opacity:1; }
+
+        .sample-label {
+            position: absolute;
+            bottom:0; left:0; right:0;
+            background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%);
+            color: rgba(255,255,255,0.9);
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 0.85rem;
+            letter-spacing: 0.08em;
+            text-align: center;
+            padding: 18px 8px 10px;
+        }
+
+        .sample-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: rgba(180,200,230,0.45);
+            font-size: 0.82rem;
+            font-family: 'Inter', sans-serif;
+            text-align: center;
+            padding: 10px;
+        }
+
+        /* ── Learn More wrap ── */
+        .learn-wrap {
+            width: 100%;
+            max-width: 480px;
+        }
+
+        /* ── Results Page ── */
+        #resultsPage { min-height:100vh; padding:0 0 80px; }
+
+        .results-topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 40px;
+            background: rgba(6,10,20,0.82);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(80,120,200,0.16);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .results-topbar .brand-mini {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #fff;
+        }
+
+        .back-btn {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: rgba(180,210,255,0.8);
+            background: none;
+            border: 1px solid rgba(80,120,200,0.35);
+            border-radius: 8px;
+            padding: 7px 16px;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+        .back-btn:hover { background:rgba(80,120,200,0.15); color:#fff; }
+
+        .results-content { max-width:1280px; margin:0 auto; padding:40px 30px 0; }
+
+        .r-card {
+            background: rgba(12,22,48,0.82);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(60,100,180,0.22);
+            border-radius: 20px;
+            padding: 28px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 32px rgba(0,0,0,0.35);
+            transition: transform 0.25s;
+        }
+        .r-card:hover { transform:translateY(-2px); }
+
+        .r-card-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: rgba(140,210,255,0.9);
+            margin-bottom: 18px;
+        }
+
+        #preview { width:100%; border-radius:14px; border:1px solid rgba(60,100,180,0.3); display:block; }
+
+        .obj-type { font-family:'Playfair Display',serif; font-size:2.4rem; font-weight:700; color:#fff; margin-bottom:14px; }
+        .prob-badges { display:flex; flex-direction:column; gap:10px; margin-top:6px; }
+        .prob-badge { font-family:'Inter',sans-serif; font-size:0.9rem; font-weight:500; padding:10px 18px; border-radius:50px; display:flex; justify-content:space-between; align-items:center; }
+        .prob-badge.galaxy { background:rgba(33,150,243,0.2); border:1px solid rgba(33,150,243,0.45); color:#90caf9; }
+        .prob-badge.star   { background:rgba(102,187,106,0.18); border:1px solid rgba(102,187,106,0.4); color:#a5d6a7; }
+
+        .prog-label { display:flex; justify-content:space-between; font-size:0.88rem; margin-bottom:6px; color:rgba(200,220,255,0.85); font-family:'Inter',sans-serif; text-transform:capitalize; }
+        .prog-track { height:8px; background:rgba(35,52,87,0.7); border-radius:99px; overflow:hidden; margin-bottom:14px; }
+        .prog-fill { height:100%; border-radius:99px; background:linear-gradient(90deg,#2196f3,#00e5ff); transition:width 1s cubic-bezier(0.25,1,0.5,1); }
+
+        .nav-tabs { border-bottom:1px solid rgba(60,100,180,0.3); gap:4px; }
+        .nav-tabs .nav-link { color:rgba(160,190,240,0.7); font-family:'Inter',sans-serif; font-size:0.82rem; font-weight:600; letter-spacing:0.08em; border:none; border-radius:8px 8px 0 0; padding:8px 16px; transition:0.2s; }
+        .nav-tabs .nav-link:hover { color:#fff; background:rgba(255,255,255,0.05); }
+        .nav-tabs .nav-link.active { background:rgba(10,20,50,0.9); color:#00e5ff; border:1px solid rgba(60,100,180,0.3); border-bottom:1px solid rgba(10,20,50,0.9); margin-bottom:-1px; }
+        .tab-content { background:rgba(7,17,30,0.85); border:1px solid rgba(60,100,180,0.25); border-top:none; border-radius:0 12px 12px 12px; padding:20px; }
+        .tab-content p, .tab-content h5 { font-family:'Inter',sans-serif; font-size:0.9rem; }
+        .tab-content h5 span { color:#00e5ff; }
+
+        canvas:not(#starfield) { background:rgba(7,17,30,0.7); border-radius:12px; border:1px solid rgba(35,52,87,0.5); }
+
+        .chat-box { background:rgba(7,17,30,0.8); border-radius:12px; height:340px; overflow-y:auto; padding:14px 16px; border:1px solid rgba(60,100,180,0.25); scrollbar-width:thin; scrollbar-color:#2196f3 transparent; font-family:'Inter',sans-serif; font-size:0.9rem; line-height:1.55; }
+        .chat-msg-user { background:rgba(0,229,255,0.08); border-radius:10px; padding:10px 14px; margin-top:10px; }
+        .chat-msg-user b { color:#00e5ff; }
+        .chat-msg-ai { color:rgba(160,190,240,0.8); margin-top:10px; padding:10px 14px; border-left:2px solid rgba(60,100,180,0.4); }
+        .chat-input-row { display:flex; gap:10px; margin-top:12px; }
+        .chat-input-row input { flex:1; background:rgba(16,24,45,0.9); border:1px solid rgba(60,100,180,0.3); border-radius:10px; color:#fff; padding:10px 14px; font-family:'Inter',sans-serif; font-size:0.9rem; outline:none; }
+        .chat-input-row input:focus { border-color:rgba(100,180,255,0.6); }
+        .chat-input-row button { background:#2196f3; border:none; border-radius:10px; color:#fff; font-family:'Inter',sans-serif; font-size:0.88rem; font-weight:600; padding:10px 20px; cursor:pointer; transition:background 0.2s, opacity 0.2s; }
+        .chat-input-row button:hover { background:#42a5f5; }
+        .chat-input-row button:disabled { opacity:0.5; cursor:not-allowed; }
+
+        .fade-in-up { opacity:0; transform:translateY(28px); transition:opacity 0.6s cubic-bezier(0.25,1,0.5,1), transform 0.6s cubic-bezier(0.25,1,0.5,1); }
+        .fade-in-up.show { opacity:1; transform:translateY(0); }
+
+        .error-msg { color:#ef5350; font-family:'Inter',sans-serif; font-size:0.95rem; }
+
+        @media (max-width:768px) {
+            .results-topbar { padding:16px 18px; }
+            .results-content { padding:24px 14px 0; }
+            .samples-grid { gap:12px; }
+            .sample-card { flex:0 0 160px; height:150px; }
+            .glass-btn-text { font-size:1.2rem; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Starfield -->
+<canvas id="starfield"></canvas>
+
+<!-- 
+    ════════════════════════════════════════════════════════════════
+    IMAGE SERVING NOTE:
+    If running via Flask server, add this route to server.py:
+    
+    @app.route('/example images/<path:filename>')
+    def serve_example_images(filename):
+        return send_from_directory('example images', filename)
+    
+    OR move images to a static/ subfolder and update paths below.
+    ════════════════════════════════════════════════════════════════
+-->
+
+<!-- ════════════  LANDING  ════════════ -->
+<div id="landingPage" class="page">
+    <div class="landing-wrap">
+
+        <div class="brand">
+            <div class="brand-title">🔭 AstroVision</div>
+            <div class="brand-sub">Driven by AI</div>
+        </div>
+
+        <!-- Glass Upload Button -->
+        <div class="upload-btn-wrap">
+            <button class="glass-btn" id="uploadBtn" aria-label="Upload your astronomical image">
+                <div class="liquid-light"></div>
+                <span class="glass-btn-text"><em>Upload your image here</em></span>
+            </button>
+            <input type="file" id="fileInput" accept="image/*">
+        </div>
+
+        <div class="or-line">or see what we're capable of…</div>
+
+        <!-- Sample Cards -->
+        <div class="samples-grid">
+            <div class="sample-card" data-sample="sample1" title="Try Sample 1">
+                <img src="example images/test1.jpg" alt="Sample galaxy 1" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                <div class="sample-placeholder" style="display:none">Sample 1</div>
+                <div class="sample-label">Sample Object 1</div>
+            </div>
+            <div class="sample-card" data-sample="sample2" title="Try Sample 2">
+                <img src="example images/test2.png" alt="Sample galaxy 2" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                <div class="sample-placeholder" style="display:none">Sample 2</div>
+                <div class="sample-label">Sample Object 2</div>
+            </div>
+            <div class="sample-card" data-sample="sample3" title="Try Sample 3">
+                <img src="example images/test3.jpeg" alt="Sample galaxy 3" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                <div class="sample-placeholder" style="display:none">Sample 3</div>
+                <div class="sample-label">Sample Object 3</div>
+            </div>
+        </div>
+
+        <!-- Glass Learn More Button (non-functional) -->
+        <div class="learn-wrap">
+            <div class="glass-btn learn-glass" role="button" aria-disabled="true">
+                <div class="liquid-light"></div>
+                <span class="glass-btn-text"><em>Learn more about the workings of this project</em></span>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+<!-- ════════════  RESULTS  ════════════ -->
+<div id="resultsPage" class="page">
+
+    <div class="results-topbar">
+        <div class="brand-mini">🔭 AstroVision</div>
+        <button class="back-btn" id="backBtn">← New Image</button>
+    </div>
+
+    <div class="results-content">
+
+        <div id="loadingState" style="text-align:center; padding:80px 20px; display:none;">
+            <div style="font-family:'Cormorant Garamond',serif; font-size:1.6rem; color:rgba(160,200,255,0.8); font-style:italic; margin-bottom:16px;">Analyzing image…</div>
+            <div style="color:rgba(120,160,220,0.6); font-size:0.9rem;">Running CNN inference and SDSS classification</div>
+        </div>
+
+        <div id="errorState" style="text-align:center; padding:80px 20px; display:none;">
+            <div class="error-msg" id="errorMsg"></div>
+            <button class="back-btn" style="margin-top:20px;" onclick="showLanding()">Back to Home</button>
+        </div>
+
+        <div id="resultsGrid" style="display:none;">
+            <div class="row g-4">
+
+                <div class="col-lg-5">
+                    <div class="r-card fade-in-up">
+                        <img id="preview" alt="Analyzed astronomical image">
+                    </div>
+                    <div class="r-card fade-in-up" style="transition-delay:0.1s">
+                        <div class="r-card-title">CNN Classification</div>
+                        <div class="obj-type" id="objType">—</div>
+                        <div class="prob-badges" id="probBadges"></div>
+                    </div>
+                    <div class="r-card fade-in-up" style="transition-delay:0.2s">
+                        <div class="r-card-title">Galaxy Morphology</div>
+                        <div id="morphology">Loading…</div>
+                    </div>
+                </div>
+
+                <div class="col-lg-7">
+                    <div class="r-card fade-in-up" style="transition-delay:0.15s">
+                        <div class="r-card-title">Color–Magnitude Dashboard</div>
+                        <canvas id="ugrizChart"></canvas>
+                        <div class="mt-4">
+                            <ul class="nav nav-tabs" id="ugrizTabs" role="tablist">
+                                <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-u">U</button></li>
+                                <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-g">G</button></li>
+                                <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-r">R</button></li>
+                                <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-i">I</button></li>
+                                <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-z">Z</button></li>
+                            </ul>
+                            <div class="tab-content" id="ugrizTabsContent">
+                                <div class="tab-pane fade"            id="tab-u" role="tabpanel">Loading…</div>
+                                <div class="tab-pane fade"            id="tab-g" role="tabpanel">Loading…</div>
+                                <div class="tab-pane fade show active" id="tab-r" role="tabpanel">Loading…</div>
+                                <div class="tab-pane fade"            id="tab-i" role="tabpanel">Loading…</div>
+                                <div class="tab-pane fade"            id="tab-z" role="tabpanel">Loading…</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="r-card fade-in-up" style="transition-delay:0.25s">
+                        <div class="r-card-title">Ask AstroVision AI</div>
+                        <div class="chat-box" id="chatHistory">
+                            <div style="color:rgba(140,170,220,0.7);">Upload an image to begin analysis.</div>
+                        </div>
+                        <div class="chat-input-row">
+                            <input id="chatInput" placeholder="Ask about this object…">
+                            <button id="chatButton">Send</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  STARFIELD — parallax + twinkle + shooting stars + events
+// ═══════════════════════════════════════════════════════
+(function() {
+    const canvas = document.getElementById('starfield');
+    const ctx = canvas.getContext('2d');
+
+    // ── Parallax state ──
+    let targetOffsetX = 0, targetOffsetY = 0;
+    let currentOffsetX = 0, currentOffsetY = 0;
+    let velX = 0, velY = 0;
+
+    document.addEventListener('mousemove', (e) => {
+        const cx = e.clientX / window.innerWidth  - 0.5;
+        const cy = e.clientY / window.innerHeight - 0.5;
+        targetOffsetX = -cx * 320;
+        targetOffsetY = -cy * 320;
+    });
+
+    // ── Star layers ──
+    const LAYERS = [
+        { count: 240, minR: 0.3, maxR: 0.9,  speed: 0.07, minO: 0.3, maxO: 0.7  },
+        { count: 130, minR: 0.9, maxR: 1.6,  speed: 0.20, minO: 0.5, maxO: 0.90 },
+        { count:  55, minR: 1.6, maxR: 2.8,  speed: 0.45, minO: 0.7, maxO: 1.0  },
+    ];
+    const stars = [];
+
+    function resize() {
+        canvas.width  = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+
+    function seedStars() {
+        stars.length = 0;
+        LAYERS.forEach(layer => {
+            for (let i = 0; i < layer.count; i++) {
+                stars.push({
+                    x:     Math.random(),
+                    y:     Math.random(),
+                    r:     layer.minR + Math.random() * (layer.maxR - layer.minR),
+                    baseO: layer.minO + Math.random() * (layer.maxO - layer.minO),
+                    // Use independent real-time phase offsets so twinkle is NEVER tied to frame delta
+                    phaseOffset: Math.random() * Math.PI * 2,
+                    // Twinkle period in ms: 2s–8s  (very slow, natural)
+                    twinklePeriod: 2000 + Math.random() * 6000,
+                    speed: layer.speed,
+                    bloomer: Math.random() < 0.12,
+                    tint: Math.random(),
+                });
+            }
+        });
+    }
+
+    // ── Shooting stars ──
+    const shooters = [];
+
+    function spawnShooter() {
+        // Pick a random edge to start from
+        const side = Math.floor(Math.random() * 4);
+        let sx, sy;
+        if (side === 0) { sx = Math.random() * canvas.width; sy = -10; }
+        else if (side === 1) { sx = canvas.width + 10; sy = Math.random() * canvas.height; }
+        else if (side === 2) { sx = Math.random() * canvas.width; sy = canvas.height + 10; }
+        else { sx = -10; sy = Math.random() * canvas.height; }
+
+        // Angle generally toward the opposite quadrant, with spread
+        const baseAngle = Math.atan2(canvas.height / 2 - sy, canvas.width / 2 - sx);
+        const angle = baseAngle + (Math.random() - 0.5) * 1.2;
+        const speed = 6 + Math.random() * 14;
+        const length = 60 + Math.random() * 160;
+        const life = 1.0;  // normalized 0..1, we count down
+
+        shooters.push({ x: sx, y: sy, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+                        length, life, maxLife: 1.0,
+                        r: 180 + Math.floor(Math.random() * 75),
+                        g: 180 + Math.floor(Math.random() * 75),
+                        b: 220 + Math.floor(Math.random() * 35) });
+    }
+
+    // ── Nebula pulses (slow expanding rings) ──
+    const nebulas = [];
+
+    function spawnNebula() {
+        nebulas.push({
+            x: 0.1 + Math.random() * 0.8,
+            y: 0.1 + Math.random() * 0.8,
+            r: 0,
+            maxR: 80 + Math.random() * 120,
+            life: 1.0,
+            // Pick a nebula color
+            hue: [200, 260, 180, 300][Math.floor(Math.random() * 4)],
+        });
+    }
+
+    // ── Scheduling ──
+    let lastShooterTime = 0;
+    let nextShooterDelay = 1500 + Math.random() * 3000;
+    let lastNebulaTime   = 0;
+    let nextNebulaDelay  = 8000 + Math.random() * 12000;
+
+    // ── Draw loop — uses real timestamp from rAF ──
+    function draw(now) {
+        requestAnimationFrame(draw);
+
+        // Parallax physics
+        const dx = targetOffsetX - currentOffsetX;
+        const dy = targetOffsetY - currentOffsetY;
+        velX = velX * 0.80 + dx * 0.052;
+        velY = velY * 0.80 + dy * 0.052;
+        currentOffsetX += velX;
+        currentOffsetY += velY;
+
+        const speed = Math.sqrt(velX * velX + velY * velY);
+        const stretch = Math.min(speed * 0.20, 10);
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // ── Nebula pulses ──
+        nebulas.forEach((n, idx) => {
+            n.r   += 0.6;
+            n.life = 1 - n.r / n.maxR;
+            if (n.life <= 0) { nebulas.splice(idx, 1); return; }
+            const nx = n.x * canvas.width;
+            const ny = n.y * canvas.height;
+            const grd = ctx.createRadialGradient(nx, ny, 0, nx, ny, n.r);
+            grd.addColorStop(0,   `hsla(${n.hue},70%,60%,0)`);
+            grd.addColorStop(0.5, `hsla(${n.hue},70%,60%,${n.life * 0.07})`);
+            grd.addColorStop(1,   `hsla(${n.hue},70%,60%,0)`);
+            ctx.beginPath();
+            ctx.arc(nx, ny, n.r, 0, Math.PI * 2);
+            ctx.fillStyle = grd;
+            ctx.fill();
+        });
+
+        // ── Stars ──
+        stars.forEach(s => {
+            const px = ((s.x * canvas.width  + currentOffsetX * s.speed) % canvas.width  + canvas.width)  % canvas.width;
+            const py = ((s.y * canvas.height + currentOffsetY * s.speed) % canvas.height + canvas.height) % canvas.height;
+
+            // Twinkle: pure wall-clock sine — NEVER affected by frame timing or parallax
+            const tPhase = (now / s.twinklePeriod) * Math.PI * 2 + s.phaseOffset;
+            const tw = 0.5 + 0.5 * Math.sin(tPhase);  // 0..1
+
+            let opacity;
+            if (s.bloomer) {
+                opacity = s.baseO * (0.1 + 0.9 * tw);
+            } else {
+                opacity = s.baseO * (0.6 + 0.4 * tw);
+            }
+            opacity = Math.max(0, Math.min(1, opacity));
+
+            let r = 255, g = 255, b = 255;
+            if      (s.tint < 0.07) { r = 170; g = 205; b = 255; }
+            else if (s.tint < 0.13) { r = 255; g = 218; b = 150; }
+            else if (s.tint < 0.16) { r = 255; g = 180; b = 180; }
+
+            // Smooth blending of streak and dot — no abrupt transitions
+            if (stretch > 0.4 && s.speed > 0.12) {
+                const angle = Math.atan2(velY, velX);
+                const len   = stretch * s.speed * 4;
+                const x0 = px - Math.cos(angle) * len * 0.5;
+                const y0 = py - Math.sin(angle) * len * 0.5;
+                const x1 = px + Math.cos(angle) * len * 0.5;
+                const y1 = py + Math.sin(angle) * len * 0.5;
+                const grd = ctx.createLinearGradient(x0, y0, x1, y1);
+                grd.addColorStop(0,   `rgba(${r},${g},${b},0)`);
+                grd.addColorStop(0.5, `rgba(${r},${g},${b},${opacity * 0.7})`);
+                grd.addColorStop(1,   `rgba(${r},${g},${b},0)`);
+                ctx.beginPath();
+                ctx.strokeStyle = grd;
+                ctx.lineWidth = s.r * 1.1;
+                ctx.moveTo(x0, y0); ctx.lineTo(x1, y1);
+                ctx.stroke();
+            }
+            // Always draw the core dot and halo regardless of speed
+            if (s.bloomer && opacity > 0.60) {
+                const halo = ctx.createRadialGradient(px, py, 0, px, py, s.r * 4);
+                halo.addColorStop(0,   `rgba(${r},${g},${b},${opacity * 0.5})`);
+                halo.addColorStop(0.4, `rgba(${r},${g},${b},${opacity * 0.15})`);
+                halo.addColorStop(1,   `rgba(${r},${g},${b},0)`);
+                ctx.beginPath();
+                ctx.arc(px, py, s.r * 4, 0, Math.PI * 2);
+                ctx.fillStyle = halo;
+                ctx.fill();
+            }
+            ctx.beginPath();
+            ctx.arc(px, py, s.r, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(${r},${g},${b},${opacity})`;
+            ctx.fill();
+        });
+
+        // ── Shooting stars ──
+        if (now - lastShooterTime > nextShooterDelay) {
+            // Spawn 1–3 at once occasionally
+            const burst = Math.random() < 0.18 ? 2 + Math.floor(Math.random() * 2) : 1;
+            for (let i = 0; i < burst; i++) spawnShooter();
+            lastShooterTime = now;
+            nextShooterDelay = 1200 + Math.random() * 3500;
+        }
+
+        shooters.forEach((s, idx) => {
+            s.x += s.vx; s.y += s.vy;
+            s.life -= 0.018;
+            if (s.life <= 0 || s.x < -200 || s.x > canvas.width + 200 || s.y < -200 || s.y > canvas.height + 200) {
+                shooters.splice(idx, 1); return;
+            }
+            const alpha = s.life;
+            const tx = s.x - Math.cos(Math.atan2(s.vy, s.vx)) * s.length;
+            const ty = s.y - Math.sin(Math.atan2(s.vy, s.vx)) * s.length;
+            const grd = ctx.createLinearGradient(tx, ty, s.x, s.y);
+            grd.addColorStop(0,    `rgba(${s.r},${s.g},${s.b},0)`);
+            grd.addColorStop(0.7,  `rgba(${s.r},${s.g},${s.b},${alpha * 0.4})`);
+            grd.addColorStop(1,    `rgba(${s.r},${s.g},${s.b},${alpha})`);
+            ctx.beginPath();
+            ctx.strokeStyle = grd;
+            ctx.lineWidth = 1.5 + alpha * 1.2;
+            ctx.moveTo(tx, ty); ctx.lineTo(s.x, s.y);
+            ctx.stroke();
+            // Bright head dot
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, 1.8 + alpha * 1.5, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+            ctx.fill();
+        });
+
+        // ── Nebula scheduling ──
+        if (now - lastNebulaTime > nextNebulaDelay) {
+            spawnNebula();
+            lastNebulaTime = now;
+            nextNebulaDelay = 7000 + Math.random() * 14000;
+        }
+    }
+
+    resize();
+    seedStars();
+    requestAnimationFrame(draw);
+    window.addEventListener('resize', () => { resize(); seedStars(); });
+})();
+
+
+// ═══════════════════════════════════════════════════════
+//  LIQUID LIGHT EFFECT — tracks mouse inside each glass btn
+// ═══════════════════════════════════════════════════════
+document.querySelectorAll('.glass-btn').forEach(btn => {
+    const light = btn.querySelector('.liquid-light');
+    if (!light) return;
+    btn.addEventListener('mousemove', (e) => {
+        const rect = btn.getBoundingClientRect();
+        light.style.left = (e.clientX - rect.left) + 'px';
+        light.style.top  = (e.clientY - rect.top)  + 'px';
+        light.style.opacity = '1';
+    });
+    btn.addEventListener('mouseleave', () => {
+        light.style.opacity = '0';
+    });
+    light.style.opacity = '0';
+    light.style.transition = 'left 0.05s, top 0.05s, opacity 0.3s';
+});
+
+
+// ═══════════════════════════════════════════════════════
+//  PAGE TRANSITIONS
+// ═══════════════════════════════════════════════════════
+function showLanding() {
+    document.getElementById('resultsPage').style.display = 'none';
+    document.getElementById('landingPage').style.display = 'block';
+}
+
+function showResults() {
+    document.getElementById('landingPage').style.display = 'none';
+    document.getElementById('resultsPage').style.display = 'block';
+}
+
+
+// ═══════════════════════════════════════════════════════
+//  UPLOAD INTERACTIONS
+// ═══════════════════════════════════════════════════════
+const uploadBtn = document.getElementById('uploadBtn');
+const fileInput = document.getElementById('fileInput');
+
+uploadBtn.addEventListener('click', () => fileInput.click());
+
+uploadBtn.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadBtn.classList.add('dragover');
+});
+uploadBtn.addEventListener('dragleave', () => uploadBtn.classList.remove('dragover'));
+uploadBtn.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadBtn.classList.remove('dragover');
+    if (e.dataTransfer.files.length > 0) uploadFile(e.dataTransfer.files[0]);
+});
+
+fileInput.addEventListener('change', () => {
+    if (fileInput.files.length > 0) { uploadFile(fileInput.files[0]); fileInput.value = ''; }
+});
+
+document.getElementById('backBtn').addEventListener('click', showLanding);
+
+document.querySelectorAll('.sample-card').forEach(card => {
+    card.addEventListener('click', () => {
+        const img = card.querySelector('img');
+        if (!img || !img.src || img.style.display === 'none') {
+            alert(`Replace INSERT_IMAGE_PATHWAY_HERE in the HTML with your actual image path for ${card.dataset.sample}.`);
+            return;
+        }
+        // Fetch the sample image and run it through the upload pipeline
+        fetch(encodeURI(img.getAttribute('src')))
+            .then(r => r.blob())
+            .then(blob => {
+                const ext = img.src.split('.').pop().split('?')[0] || 'jpg';
+                uploadFile(new File([blob], `${card.dataset.sample}.${ext}`, { type: blob.type || 'image/jpeg' }));
+            })
+            .catch(() => alert('Could not load sample image. Make sure the path is correct and the server is running.'));
+    });
+});
+
+
+// ═══════════════════════════════════════════════════════
+//  CHART
+// ═══════════════════════════════════════════════════════
+let ugrizChart = null;
+let currentAstroData = null;
+
+function drawChartForBand(band) {
+    if (!currentAstroData) return;
+    const bandIndices = { u:0, g:1, r:2, i:3, z:4 };
+    const targetY = currentAstroData.ugriz[bandIndices[band]];
+    const colorIndex = currentAstroData.ugriz[1] - currentAstroData.ugriz[2];
+    const backgroundData = (currentAstroData.cmd_background || []).map(p => ({ x: p.color_index, y: p[band] }));
+
+    if (ugrizChart) {
+        ugrizChart.data.datasets[0].data = backgroundData;
+        ugrizChart.data.datasets[1].data = [{ x: colorIndex, y: targetY }];
+        ugrizChart.options.scales.y.title.text = `Magnitude (${band.toUpperCase()})`;
+        ugrizChart.update();
+    } else {
+        ugrizChart = new Chart(document.getElementById('ugrizChart'), {
+            type: 'scatter',
+            data: {
+                datasets: [
+                    { label: 'SDSS Galaxies (ref)', data: backgroundData, pointRadius: 2, backgroundColor: 'rgba(100,140,200,0.2)' },
+                    { label: 'Target Object', data: [{ x: colorIndex, y: targetY }], pointRadius: 10, backgroundColor: '#00e5ff', borderColor: '#ffffff', borderWidth: 2, pointHoverRadius: 12 }
+                ]
+            },
+            options: {
+                responsive: true,
+                animation: { duration: 800, easing: 'easeOutQuart' },
+                plugins: {
+                    legend: { labels: { color: 'white', font: { size: 13 } } },
+                    tooltip: { backgroundColor: 'rgba(0,0,0,0.85)' }
+                },
+                scales: {
+                    x: { title: { display:true, text:'Color Index (g − r)', color:'#8fd3ff', font:{size:13,weight:'bold'} }, ticks:{color:'#8ea3d9'}, grid:{color:'rgba(35,52,87,0.4)'} },
+                    y: { reverse:true, title:{ display:true, text:`Magnitude (${band.toUpperCase()})`, color:'#8fd3ff', font:{size:13,weight:'bold'} }, ticks:{color:'#8ea3d9'}, grid:{color:'rgba(35,52,87,0.4)'} }
+                }
+            }
+        });
+    }
+}
+
+document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(btn => {
+    btn.addEventListener('shown.bs.tab', e => {
+        drawChartForBand(e.target.getAttribute('data-bs-target').replace('#tab-',''));
+    });
+});
+
+
+// ═══════════════════════════════════════════════════════
+//  UPLOAD PIPELINE
+// ═══════════════════════════════════════════════════════
+async function uploadFile(file) {
+    showResults();
+    document.getElementById('loadingState').style.display = 'block';
+    document.getElementById('errorState').style.display = 'none';
+    document.getElementById('resultsGrid').style.display = 'none';
+    if (ugrizChart) { ugrizChart.destroy(); ugrizChart = null; }
+
+    document.getElementById('preview').src = URL.createObjectURL(file);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+        const response = await fetch('/upload', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            const errText = await response.text();
+            throw new Error(`Server error ${response.status}: ${errText}`);
+        }
+
+        const data = await response.json();
+        currentAstroData = data;
+
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('resultsGrid').style.display = 'block';
+        setTimeout(() => document.querySelectorAll('.fade-in-up').forEach(el => el.classList.add('show')), 50);
+
+        document.getElementById('objType').textContent = data.object_type.toUpperCase();
+        document.getElementById('probBadges').innerHTML = `
+            <span class="prob-badge galaxy"><span>Galaxy</span><span>${parseFloat(data.star_galaxy_probs.galaxy).toFixed(2)}%</span></span>
+            <span class="prob-badge star"><span>Star</span><span>${parseFloat(data.star_galaxy_probs.star).toFixed(2)}%</span></span>
+        `;
+
+        const [u, g, r, i, z] = data.ugriz;
+        const bandMeta = {
+            u:['Ultraviolet (u)','U-band'], g:['Green (g)','G-band'],
+            r:['Red (r)','R-band — standard SDSS plot'],
+            i:['Infrared (i)','I-band'], z:['Infrared (z)','Z-band']
+        };
+        const vals = {u,g,r,i,z};
+        for (const [band, mag] of Object.entries(vals)) {
+            const meta = bandMeta[band];
+            document.getElementById(`tab-${band}`).innerHTML = `
+                <h5 style="margin-bottom:8px;">${meta[0]} Magnitude: <span>${mag.toFixed(3)}</span></h5>
+                <p style="color:rgba(160,190,240,0.75);font-size:0.88rem;">
+                    Compare your object's ${Array.isArray(meta) ? meta[1] : meta} against the reference galaxies in the chart above.
+                </p>`;
+        }
+
+        new bootstrap.Tab(document.querySelector('button[data-bs-target="#tab-r"]')).show();
+        drawChartForBand('r');
+
+        const morph = document.getElementById('morphology');
+        if (data.morphology_probs) {
+            morph.innerHTML = '';
+            for (const [key, pct] of Object.entries(data.morphology_probs)) {
+                morph.innerHTML += `
+                    <div class="prog-label"><span>${key}</span><span>${pct}%</span></div>
+                    <div class="prog-track"><div class="prog-fill" style="width:${pct}%"></div></div>`;
+            }
+        } else {
+            morph.innerHTML = `<p style="color:rgba(160,190,240,0.7);font-size:0.9rem;">Morphology skipped — object predicted as a Star.</p>`;
+        }
+
+        document.getElementById('chatHistory').innerHTML = `
+            <div style="color:rgba(140,170,220,0.75);">
+                Analysis complete. Classified as a <strong style="color:#e8eaf6;">${data.object_type}</strong>. Ask any question about this object.
+            </div>`;
+        // Reset conversation history for the new image
+        chatConversation.length = 0;
+
+    } catch (err) {
+        console.error('Upload error:', err);
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('errorState').style.display = 'block';
+        
+        let errMsg = err.message;
+        if (errMsg.includes('Failed to fetch')) {
+            errMsg = `Cannot reach the server. Make sure it's running at http://${window.location.hostname}:5000`;
+        } else if (errMsg.includes('403')) {
+            errMsg = 'Access denied (403). This may be a network configuration issue. Try accessing from the same machine or check firewall settings.';
+        }
+        document.getElementById('errorMsg').textContent = `Error: ${errMsg}`;
+    }
+}
+
+
+// Chat
+const chatConversation = [];  // stores {role, content} for context window
+let chatBusy = false;
+
+async function sendChat() {
+    const input = document.getElementById('chatInput');
+    const history = document.getElementById('chatHistory');
+    const btn = document.getElementById('chatButton');
+    const msg = input.value.trim();
+    if (!msg || chatBusy) return;
+
+    // Show user message
+    history.innerHTML += `<div class="chat-msg-user"><b>You:</b> ${escapeHtml(msg)}</div>`;
+    input.value = '';
+    chatBusy = true;
+    btn.textContent = '…';
+    btn.disabled = true;
+
+    // Typing indicator
+    const typingId = 'typing-' + Date.now();
+    history.innerHTML += `<div class="chat-msg-ai" id="${typingId}" style="opacity:0.5;"><em>Thinking…</em></div>`;
+    history.scrollTop = history.scrollHeight;
+
+    // Build astro context from current analysis
+    const astroContext = currentAstroData ? {
+        object_type: currentAstroData.object_type,
+        star_galaxy_probs: currentAstroData.star_galaxy_probs,
+        ugriz: currentAstroData.ugriz,
+        morphology_probs: currentAstroData.morphology_probs || null
+    } : {};
+
+    // Add user message to conversation history
+    chatConversation.push({ role: 'user', content: msg });
+
+    try {
+        const resp = await fetch('/chat', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                message: msg,
+                astro_context: astroContext,
+                history: chatConversation.slice(0, -1)
+            })
+        });
+
+        if (!resp.ok) {
+            throw new Error(`Server returned ${resp.status}: ${await resp.text()}`);
+        }
+
+        const data = await resp.json();
+        const reply = data.reply || 'No response received.';
+
+        // Remove typing indicator and show reply
+        const typingEl = document.getElementById(typingId);
+        if (typingEl) typingEl.remove();
+
+        const replyClass = data.error ? 'chat-msg-ai' : 'chat-msg-ai';
+        const replyStyle = data.error ? 'color:rgba(255,150,150,0.85);' : '';
+        history.innerHTML += `<div class="${replyClass}" style="${replyStyle}"><b style="color:rgba(140,210,255,0.9);">AstroVision:</b> ${escapeHtml(reply)}</div>`;
+
+        // Store assistant reply in conversation history
+        chatConversation.push({ role: 'assistant', content: reply });
+
+        // Keep history manageable (last 20 exchanges)
+        while (chatConversation.length > 40) {
+            chatConversation.shift();
+        }
+
+    } catch (err) {
+        const typingEl = document.getElementById(typingId);
+        if (typingEl) typingEl.remove();
+        
+        let errMsg = err.message;
+        if (errMsg.includes('Failed to fetch')) {
+            errMsg = `Cannot reach chat server at http://${window.location.hostname}:5000. Make sure Flask is running.`;
+        }
+        history.innerHTML += `<div class="chat-msg-ai" style="color:rgba(255,150,150,0.85);"><b>Error:</b> ${escapeHtml(errMsg)}</div>`;
+    }
+
+    chatBusy = false;
+    btn.textContent = 'Send';
+    btn.disabled = false;
+    history.scrollTop = history.scrollHeight;
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+document.getElementById('chatButton').addEventListener('click', sendChat);
+document.getElementById('chatInput').addEventListener('keydown', e => { if (e.key === 'Enter') sendChat(); });
+
+// Check chat status on page load
+(async function checkChatStatus() {
+    try {
+        const resp = await fetch('/chat/status');
+        const data = await resp.json();
+        if (!data.available) {
+            const history = document.getElementById('chatHistory');
+            history.innerHTML += `<div class="chat-msg-ai" style="color:rgba(255,200,100,0.8); margin-top:8px;"><em>⚠ ${escapeHtml(data.warning || 'Chat is not available.')}</em></div>`;
+        }
+    } catch (e) {
+        // Not running via Flask — skip silently
+    }
+})();
+</script>
+</body>
+</html>

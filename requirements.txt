@@ -1,0 +1,12 @@
+Flask
+Werkzeug
+numpy
+torch
+torchvision
+Pillow
+opencv-python
+pandas
+scikit-learn
+matplotlib
+flask-cors
+requests
