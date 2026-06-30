@@ -2,9 +2,8 @@
 
 **AstroVision** is an intelligent astrophysics analysis tool that combines computer vision and large language models to interpret astronomical images. Upload images of celestial objects, and AstroVision will classify them, extract photometric properties, analyze their morphology, and provide AI-powered insights.
 
-This project was made to put newly learnt machine learning skills to use and acts as a demonstration. However, with a little bit of refining (such as with the accuracy of visual models and presentation of the data), it could possibly aid amateur astronomers and help contextualize findings at least at a basic level.
+This project was made to put newly learnt machine learning skills to use and acts as a demonstration. However, with a little bit of refining (such as with the accuracy of visual models and presentation of the data), it could possibly aid amateur astronomers and help contextualize findings at least at a basic level. Originally built near the end of the summer of 2025, recieved a polished presentable look & published June 29th 2026
 
-Originally built near the end of the summer of 2025, recieved a polished presentable look & published June 29th
 ---
 
 ## 📋 Table of Contents
