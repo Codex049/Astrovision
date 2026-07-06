@@ -6,7 +6,7 @@ This project was made to put newly learnt machine learning skills to use and act
 
 ---
 
-## 📋 Table of Contents
+## Table of Contents
 
 1. [Project Overview](#project-overview)
 2. [Architecture](#architecture)
@@ -21,7 +21,7 @@ This project was made to put newly learnt machine learning skills to use and act
 
 ---
 
-## 📖 Project Overview
+## Project Overview
 
 AstroVision is built to analyze astronomical images using three-stage deep learning pipeline:
 
@@ -42,7 +42,7 @@ The system then uses an LLM powered by Ollama to provide educational, accessible
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ### System Flow
 
@@ -109,7 +109,7 @@ The system then uses an LLM powered by Ollama to provide educational, accessible
 
 ---
 
-## 🧠 CNN Model Specifications
+## CNN Model Specifications
 
 The system uses **4 trained PyTorch models** for end-to-end astronomical analysis.
 
@@ -341,7 +341,7 @@ This rich data is then sent to the AI chatbot, which uses it to answer your ques
 
 ---
 
-## 🌐 Server.py Documentation
+## Server.py Documentation
 
 ### Overview
 `server.py` is a **Flask-based REST API backend** that:
@@ -438,7 +438,7 @@ Health check:     http://192.168.1.100:5001/health
 
 ---
 
-## 💬 LLM Chat System
+## LLM Chat System
 
 ### Overview
 The chat system enables users to ask questions about uploaded astronomical images using natural language. Powered by **Ollama**, an LLM framework, it provides accessible, educational explanations without requiring an internet connection or API keys.
@@ -557,7 +557,7 @@ Edit the `SYSTEM_PROMPT` variable in `server.py` to change the LLM's personality
 
 ---
 
-## 🎨 Frontend & UI
+## Frontend & UI
 
 ### Technology Stack
 - **HTML5** + **CSS3**
@@ -673,7 +673,7 @@ If missing, the app will warn but still work.
 
 ---
 
-## ▶️ Running the Application
+## Running the Application
 
 ### Terminal 1: Start Ollama (if using chat)
 ```bash
@@ -774,7 +774,7 @@ Sample astronomical images for gallery demo.
 
 ---
 
-## 🎓 Technical Deep Dives
+## Technical Deep Dives
 
 ### Color-Magnitude Diagram (CMD)
 Used by the UGRIZ regressor to understand magnitude relationships:
@@ -817,7 +817,7 @@ This makes sense because stars don't have shape — they're just points of light
 
 ---
 
-## ✅ Checklist: Before Deployment
+## Checklist: Before Deployment
 
 - [ ] Ollama installed and `ollama serve` tested
 - [ ] Model downloaded: `ollama pull llama3.2`
@@ -833,7 +833,7 @@ This makes sense because stars don't have shape — they're just points of light
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 To add features or improve AstroVision:
 
