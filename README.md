@@ -33,12 +33,12 @@ The system then uses an LLM powered by Ollama to provide educational, accessible
 
 ### Key Features
 
-- ✨ **Multi-stage CNN pipeline** for comprehensive object analysis
-- 🧠 **AI-powered chat** using Ollama for natural language insights
-- 📊 **Photometric analysis** with UGRIZ magnitude extraction
-- 🔬 **Galaxy morphology classification** for structural analysis
-- 🌐 **Web-based interface** with real-time results
-- 📍 **Runs Locally** on nearly any device
+- **Multi-stage CNN pipeline** for comprehensive object analysis
+- **AI-powered chat** using Ollama for natural language insights
+- **Photometric analysis** with UGRIZ magnitude extraction
+- **Galaxy morphology classification** for structural analysis
+- **Web-based interface** with real-time results
+- **Runs Locally** on nearly any device
 
 ---
 
@@ -602,7 +602,7 @@ Edit the `SYSTEM_PROMPT` variable in `server.py` to change the LLM's personality
 
 ---
 
-## 🚀 Setup & Installation
+## Setup & Installation
 
 ### Prerequisites
 - Python 3.8+
@@ -746,7 +746,7 @@ The dataset retrieved and cleaned is high-quality for tasks like this, feel free
 
 ---
 
-## 📊 Data Files
+## Data Files
 
 ### `references.csv`
 SDSS reference galaxy data used for CMD background.
